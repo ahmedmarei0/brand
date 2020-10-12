@@ -11,7 +11,7 @@ import 'package:brand/provider/change_color.dart';
 import 'package:brand/routes/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -24,12 +24,15 @@ class _LoginPageState extends State<LoginPage> {
   String _email, _password;
   bool keepMeLogin = false;
   bool isUser = true;
+  bool load = false;
   @override
   Widget build(BuildContext context) {
     double h = getHeight(context);
     double w = getWidth(context);
     MainColorApp mainColorApp = Provider.of<MainColorApp>(context);
-    return Scaffold(
+    return ModalProgressHUD(
+      inAsyncCall: load,
+      child: Scaffold(
         bottomNavigationBar: CustomAppBar(),
         appBar: AppBar(
           title: Text(
@@ -115,11 +118,17 @@ class _LoginPageState extends State<LoginPage> {
                       builder: (context) => RaisedButton(
                         onPressed: () async {
                           if (_globalKey.currentState.validate()) {
+                            setState(() {
+                              load = true;
+                            });
                             _globalKey.currentState.save();
                             if (isUser) {
                               Auth auth = new Auth();
                               try {
                                 await auth.signIn(_email, _password);
+                                setState(() {
+                                  load = false;
+                                });
                                 Navigator.of(context).pushNamedAndRemoveUntil(
                                     homePageUser,
                                     (Route<dynamic> route) => false);
@@ -130,10 +139,16 @@ class _LoginPageState extends State<LoginPage> {
                                   content: Text(e.message),
                                 ));
                               }
+                              setState(() {
+                                load = false;
+                              });
                             } else {
                               Auth auth = new Auth();
                               try {
                                 await auth.signIn(_email, _password);
+                                setState(() {
+                                  load = false;
+                                });
                                 Navigator.of(context).pushNamedAndRemoveUntil(
                                     homePageAdmin,
                                     (Route<dynamic> route) => false);
@@ -144,6 +159,9 @@ class _LoginPageState extends State<LoginPage> {
                                   content: Text(e.message),
                                 ));
                               }
+                              setState(() {
+                                load = false;
+                              });
                             }
                           }
                         },
@@ -226,6 +244,8 @@ class _LoginPageState extends State<LoginPage> {
               )
             ],
           ),
-        ));
+        ),
+      ),
+    );
   }
 }
